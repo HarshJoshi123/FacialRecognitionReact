@@ -1,0 +1,350 @@
+//Keep in mind order of declaring .nets of model loading that model 
+//remove redundant lines if possible 
+import React, { Component } from 'react';
+import './App.css';
+import * as canvas from 'canvas';
+import {defaultimage} from "./image/imag.png" 
+import * as faceapi from 'face-api.js';
+const { Canvas, Image, ImageData } = canvas
+faceapi.env.monkeyPatch({
+  Canvas: HTMLCanvasElement,
+  Image: HTMLImageElement,
+  ImageData: ImageData,
+  Video: HTMLVideoElement,
+  createCanvasElement: () => document.createElement('canvas'),
+  createImageElement: () => document.createElement('img')
+});
+class App extends Component{
+   
+  componentWillMount=async ()=>{
+//   await faceapi.loadSsdMobilenetv1Model('/weights');
+
+//   await faceapi.loadFaceExpressionModel('/weights');
+   
+   this.detectionNet = faceapi.nets.ssdMobilenetv1; 
+   this.detectnet1=faceapi.nets.faceLandmark68Net;
+   this.detectnet2=faceapi.nets.faceRecognitionNet;
+   await this.detectionNet.load('/weights');
+   await this.detectnet1.load('/weights')
+   await this.detectnet2.load('/weights')
+   
+  // await faceapi.loadAgeGenderModel('/weights'); //place after detectionNet 
+   await faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+   await faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+   await faceapi.loadFaceLandmarkModel('/weights')
+   await faceapi.loadFaceRecognitionModel('/weights')
+  }
+
+// handleclick= async ()=>{
+//  const minConfidence=0.5
+// //  const faceapiOptions= await new faceapi.SsdMobilenetv1Options({minConfidence}); //not important
+
+//   //const input=document.getElementById("myimg");
+//   //const detections =await faceapi.detectSingleFace(input)
+//   const input='myimg'//dummy is myimg and myimg1  is my pic 
+//  // const detections1 = await faceapi.detectSingleFace(input, faceapiOptions)
+//   const detections1 = await faceapi.detectSingleFace(input).withAgeAndGender()
+  
+//  console.log(detections1)
+// console.log('after')
+
+
+// }
+
+handleclick= async ()=>{
+  const minConfidence=0.5
+   const faceapiOptions= await new faceapi.SsdMobilenetv1Options({minConfidence});
+   //const input=document.getElementById("myimg");
+   //const detections =await faceapi.detectSingleFace(input)
+   const input='myimg'//dummy is myimg and myimg1  is my pic 
+   const input1='myimg1'
+   // const detections1 = await faceapi.detectSingleFace(input, faceapiOptions)
+   //const detections1 = await faceapi.detectSingleFace(input).withAgeAndGender()
+   
+  //console.log(detections1)
+ 
+ const results = await faceapi
+ .detectAllFaces(input)
+ .withFaceLandmarks()
+ .withFaceDescriptors()
+
+if (!results.length) {
+ return
+}
+
+// create FaceMatcher with automatically assigned labels
+// from the detection results for the reference image
+const faceMatcher = new faceapi.FaceMatcher(results)
+const singleResult = await faceapi
+ .detectSingleFace(input1)
+ .withFaceLandmarks()
+ .withFaceDescriptor()
+
+if (singleResult) {
+ const bestMatch = faceMatcher.findBestMatch(singleResult.descriptor)
+ console.log(bestMatch.toString())
+}
+
+ 
+ }
+ 
+
+render(){
+  console.log(faceapi.nets);
+  return (
+    <div className="App">
+      <img id="myimg" height={100} width={100} crossorigin="anonymous" src="https://images.squarespace-cdn.com/content/v1/52a1b3bfe4b05a96c7788819/1454893689840-D4VOBMU2AYYCN9PIAOT1/ke17ZwdGBToddI8pDm48kNu93_l1Rc0JoXikXAEKHf17gQa3H78H3Y0txjaiv_0fDoOvxcdMmMKkDsyUqMSsMWxHk725yiiHCCLfrh8O1z5QHyNOqBUUEtDDsRWrJLTmDJyaVitQ06bkWUY0OMxkmN-bdz7wg8la12Me-ub45vBE5029s6uMXtkNCzVgxK8m/nenezic-random.jpg?format=1500w" />
+      <button onClick={this.handleclick}> Press </button>
+      <img id="myimg1" src={require('./image/img.jpg')} height={100} width={100}/>
+      <br/>
+      <div className="left">
+      <div id="startbutton">
+
+        </div>
+        <video id="preview" width="160" height="120" autoplay muted></video>
+      </div>
+
+      <div className="right">
+      <div className="stop">
+
+      </div>
+      <video id="recording" width="160" height="120" controls></video>
+      </div>
+      
+      
+   </div>
+  );
+  }
+}
+
+export default App;
+
+
+
+
+
+
+
+
+
+
+
+//Keep in mind order of declaring .nets of model loading that model 
+//remove redundant lines if possible 
+import React, { Component } from 'react';
+import './App.css';
+import * as canvas from 'canvas';
+import {defaultimage} from "./image/imag.png" 
+import * as faceapi from 'face-api.js';
+import VideoRecorder from 'react-video-recorder'
+const { Canvas, Image, ImageData } = canvas
+faceapi.env.monkeyPatch({
+  Canvas: HTMLCanvasElement,
+  Image: HTMLImageElement,
+  ImageData: ImageData,
+  Video: HTMLVideoElement,
+  createCanvasElement: () => document.createElement('canvas'),
+  createImageElement: () => document.createElement('img')
+});
+class App extends Component{
+
+  
+ 
+  componentWillMount=async ()=>{
+//   await faceapi.loadSsdMobilenetv1Model('/weights');
+
+//   await faceapi.loadFaceExpressionModel('/weights');
+
+let recordingTimeMS = 5000;    
+
+
+   this.detectionNet = faceapi.nets.ssdMobilenetv1; 
+   this.detectnet1=faceapi.nets.faceLandmark68Net;
+   this.detectnet2=faceapi.nets.faceRecognitionNet;
+   await this.detectionNet.load('/weights');
+   await this.detectnet1.load('/weights')
+   await this.detectnet2.load('/weights')
+   
+  // await faceapi.loadAgeGenderModel('/weights'); //place after detectionNet 
+   await faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+   await faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+   await faceapi.loadFaceLandmarkModel('/weights')
+   await faceapi.loadFaceRecognitionModel('/weights')
+
+
+  }
+  // startRecording(stream, lengthInMS) {
+  //   let recorder = new MediaRecorder(stream);
+  //   let data = [];
+   
+  //   recorder.ondataavailable = event => data.push(event.data);
+  //   recorder.start();
+  //  // log(recorder.state + " for " + (lengthInMS/1000) + " seconds...");
+   
+  //   let stopped = new Promise((resolve, reject) => {
+  //     recorder.onstop = resolve;
+  //     recorder.onerror = event => reject(event.name);
+  //   });
+  
+   
+  //   let recorded =wait(lengthInMS).then(
+  //     () => recorder.state == "recording" && recorder.stop()
+  //   );
+   
+  //   return Promise.all([
+  //     stopped,
+  //     recorded
+  //   ])
+  //   .then(() => data);
+  // }
+
+  // stop(stream) {
+  //   stream.getTracks().forEach(track => track.stop());
+  // }
+  
+
+
+  componentDidMount(){
+    
+    var preview = document.getElementById("preview");
+    var recording = document.getElementById("recording");
+    var startButton = document.getElementById("startButton");
+    var stopButton = document.getElementById("stopButton");
+    var logElement = document.getElementById("log");
+    
+  
+  //   startButton.addEventListener("click", function() {
+  //   navigator.mediaDevices.getUserMedia({
+  //     video: true,
+  //     audio: true
+  //   }).then(stream => {
+  //     preview.srcObject = stream;
+  // //    downloadButton.href = stream;
+  //     preview.captureStream = preview.captureStream || preview.mozCaptureStream;
+  //     return new Promise(resolve => preview.onplaying = resolve);
+  //   }).then(() => startRecording(preview.captureStream(), recordingTimeMS))
+  //   .then (recordedChunks => {
+  //     let recordedBlob = new Blob(recordedChunks, { type: "video/webm" });
+  //     recording.src = URL.createObjectURL(recordedBlob);
+  //     // downloadButton.href = recording.src;
+  //     // downloadButton.download = "RecordedVideo.webm";
+      
+  //   //  log("Successfully recorded " + recordedBlob.size + " bytes of " +
+  //     //    recordedBlob.type + " media.");
+  //   })
+  //   .catch();
+  // }, false);
+
+  // stopButton.addEventListener("click", function() {
+  //   stop(preview.srcObject);
+  // }, false);
+
+
+   }
+
+  // wait=(delayInMS)=>
+  //    new Promise(resolve => setTimeout(resolve, delayInMS));
+  
+
+  
+
+handlec= async (videoblob)=>{
+ const minConfidence=0.5
+//  const faceapiOptions= await new faceapi.SsdMobilenetv1Options({minConfidence}); //not important
+
+  //const input=document.getElementById("myimg");
+  //const detections =await faceapi.detectSingleFace(input)
+//  const input='myimg'//dummy is myimg and myimg1  is my pic  open thisssssssssssssssssssssss
+ // const detections1 = await faceapi.detectSingleFace(input, faceapiOptions)
+  const detections1 = await faceapi.detectSingleFace(videoblob).withAgeAndGender()
+  
+ console.log(detections1)
+console.log('after')
+
+
+}
+handleclick= async ()=>{
+  const minConfidence=0.5
+   const faceapiOptions= await new faceapi.SsdMobilenetv1Options({minConfidence});
+   //const input=document.getElementById("myimg");
+   //const detections =await faceapi.detectSingleFace(input)
+   const input='myimg'//dummy is myimg and myimg1  is my pic 
+   const input1='myimg1'
+   // const detections1 = await faceapi.detectSingleFace(input, faceapiOptions)
+   //const detections1 = await faceapi.detectSingleFace(input).withAgeAndGender()
+   
+  //console.log(detections1)
+ 
+ const results = await faceapi
+ .detectAllFaces(input)
+ .withFaceLandmarks()
+ .withFaceDescriptors()
+
+if (!results.length) {
+ return
+}
+
+// create FaceMatcher with automatically assigned labels
+// from the detection results for the reference image
+const faceMatcher = new faceapi.FaceMatcher(results)
+const singleResult = await faceapi
+ .detectSingleFace(input1)
+ .withFaceLandmarks()
+ .withFaceDescriptor()
+
+if (singleResult) {
+ const bestMatch = faceMatcher.findBestMatch(singleResult.descriptor)
+ console.log(bestMatch.toString())
+}
+
+ 
+ }
+ 
+
+render(){
+  console.log(faceapi.nets);
+  return (
+    <div className="App">
+      <img id="myimg" height={100} width={100} crossorigin="anonymous" src="https://images.squarespace-cdn.com/content/v1/52a1b3bfe4b05a96c7788819/1454893689840-D4VOBMU2AYYCN9PIAOT1/ke17ZwdGBToddI8pDm48kNu93_l1Rc0JoXikXAEKHf17gQa3H78H3Y0txjaiv_0fDoOvxcdMmMKkDsyUqMSsMWxHk725yiiHCCLfrh8O1z5QHyNOqBUUEtDDsRWrJLTmDJyaVitQ06bkWUY0OMxkmN-bdz7wg8la12Me-ub45vBE5029s6uMXtkNCzVgxK8m/nenezic-random.jpg?format=1500w" />
+      <button onClick={this.handleclick}> Press </button>
+      <img id="myimg1" src={require('./image/img.jpg')} height={100} width={100}/>
+      <br/>
+      <div className="left">
+      <div id="startbutton">
+
+        </div>
+        <video id="preview" width="160" height="120" autoplay muted></video>
+      </div>
+
+      <div className="right">
+      <div className="stop">
+
+      </div>
+      <video id="recording" width="160" height="120" controls></video>
+      </div>
+      <VideoRecorder 
+    onRecordingComplete={(videoBlob) => {
+    //  this.setState({s:"bruh"})
+      // Do something with the video...
+      //const mediaStream = new MediaStream();  
+      const mediaSource = new MediaSource();
+const videoobj = document.getElementById('vid');
+try {
+  videoobj.srcObject = mediaSource;
+} catch (error) {
+  videoobj.src = URL.createObjectURL(mediaSource);
+}
+
+          //video.src = window.URL.createObjectURL(video);
+     // video.srcObject = mediaStream;
+      this.handlec(videoobj)     
+      console.log('videoBlob', videoBlob)
+    }} 
+  />
+ <video id="vid" width="160" height="120" controls></video>      
+   </div>
+  );
+  }
+}
+
+export default App;
